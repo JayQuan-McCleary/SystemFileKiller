@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "sfk": {
+      "type": "stdio",
+      "command": "D:/.ClaudeTools/System File Killer/SystemFileKiller.MCP/publish/SystemFileKiller.MCP.exe",
+      "args": []
+    }
+  }
+}

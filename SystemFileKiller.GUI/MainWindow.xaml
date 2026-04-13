@@ -1,0 +1,256 @@
+<Window x:Class="SystemFileKiller.GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="System File Killer" Height="700" Width="1000"
+        Background="#1a1a2e" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <!-- Dark theme styles -->
+        <Style x:Key="DarkButton" TargetType="Button">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#0f3460"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#e94560"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource DarkButton}">
+            <Setter Property="Background" Value="#533483"/>
+            <Setter Property="BorderBrush" Value="#e94560"/>
+        </Style>
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="#b0b0b0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" Background="#16213e"
+                                BorderBrush="#0f3460" BorderThickness="1,1,1,0"
+                                CornerRadius="4,4,0,0" Padding="16,8" Margin="2,0,0,0">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#0f3460"/>
+                                <Setter Property="Foreground" Value="#e94560"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="RowBackground" Value="#1a1a2e"/>
+            <Setter Property="AlternatingRowBackground" Value="#16213e"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#0f3460"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#0f3460"/>
+            <Setter Property="Foreground" Value="#e94560"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderBrush" Value="#533483"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#16213e"/>
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+            <Setter Property="BorderBrush" Value="#0f3460"/>
+            <Setter Property="CaretBrush" Value="#e94560"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#e0e0e0"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#0f3460" Padding="16,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="SYSTEM FILE KILLER" FontSize="20" FontWeight="Bold"
+                           Foreground="#e94560" VerticalAlignment="Center"/>
+                <TextBlock Text="  Anti-Malware Defense Toolkit" FontSize="12"
+                           Foreground="#888" VerticalAlignment="Center" Margin="8,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <TabControl Grid.Row="1" Background="#1a1a2e" BorderBrush="#0f3460" Margin="8">
+
+            <!-- Tab 1: Processes -->
+            <TabItem Header="Processes">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,4,0,8">
+                        <Button Content="Refresh" Style="{StaticResource DarkButton}"
+                                Click="ProcessRefresh_Click" Margin="0,0,8,0"/>
+                        <TextBox x:Name="ProcessFilterBox" Width="200"
+                                 TextChanged="ProcessFilter_TextChanged"
+                                 Tag="Filter processes..."/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="ProcessGrid" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              SelectionMode="Extended" CanUserSortColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="PID" Binding="{Binding Pid}" Width="70"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
+                            <DataGridTextColumn Header="Memory (MB)" Binding="{Binding MemoryMB}" Width="100"/>
+                            <DataGridTextColumn Header="Path" Binding="{Binding FilePath}" Width="*"/>
+                        </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Force Kill" Click="ProcessKill_Click"/>
+                                <MenuItem Header="Kill Process Tree" Click="ProcessKillTree_Click"/>
+                                <Separator/>
+                                <MenuItem Header="Copy PID" Click="ProcessCopyPid_Click"/>
+                                <MenuItem Header="Open File Location" Click="ProcessOpenLocation_Click"/>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Force Kill Selected" Style="{StaticResource DangerButton}"
+                                Click="ProcessKill_Click" Margin="0,0,8,0"/>
+                        <Button Content="Kill Tree" Style="{StaticResource DangerButton}"
+                                Click="ProcessKillTree_Click"/>
+                        <TextBlock x:Name="ProcessCountText" Foreground="#888"
+                                   VerticalAlignment="Center" Margin="16,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab 2: File Destroyer -->
+            <TabItem Header="File Destroyer">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,4,0,8">
+                        <TextBlock Text="Target File or Directory:" Foreground="#e0e0e0" Margin="0,0,0,4"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="FilePathBox" Grid.Column="0"/>
+                            <Button Content="Browse File" Style="{StaticResource DarkButton}"
+                                    Grid.Column="1" Click="BrowseFile_Click" Margin="8,0,0,0"/>
+                            <Button Content="Browse Folder" Style="{StaticResource DarkButton}"
+                                    Grid.Column="2" Click="BrowseFolder_Click" Margin="8,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                        <Button Content="Unlock Handles" Style="{StaticResource DarkButton}"
+                                Click="FileUnlock_Click" Margin="0,0,8,0"/>
+                        <Button Content="Force Delete" Style="{StaticResource DangerButton}"
+                                Click="FileForceDelete_Click" Margin="0,0,8,0"/>
+                        <Button Content="Delete Directory" Style="{StaticResource DangerButton}"
+                                Click="FileDeleteDir_Click" Margin="0,0,8,0"/>
+                        <Button Content="Schedule Reboot Delete" Style="{StaticResource DarkButton}"
+                                Click="FileRebootDelete_Click"/>
+                    </WrapPanel>
+
+                    <Border Grid.Row="2" Background="#16213e" BorderBrush="#0f3460"
+                            BorderThickness="1" CornerRadius="4" Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="FileOutputText" Foreground="#e0e0e0"
+                                       TextWrapping="Wrap" FontFamily="Consolas"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Tab 3: Registry -->
+            <TabItem Header="Registry Scanner">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,4,0,8">
+                        <Button Content="Scan All" Style="{StaticResource DarkButton}"
+                                Click="RegistryScanAll_Click" Margin="0,0,8,0"/>
+                        <Button Content="Scan Suspicious Only" Style="{StaticResource DangerButton}"
+                                Click="RegistryScanSuspicious_Click" Margin="0,0,8,0"/>
+                        <CheckBox x:Name="ShowSuspiciousOnly" Content="Show suspicious only"
+                                  VerticalAlignment="Center" Margin="16,0,0,0"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="RegistryGrid" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              SelectionMode="Extended">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Path" Binding="{Binding HivePath}" Width="350"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding ValueName}" Width="180"/>
+                            <DataGridTextColumn Header="Data" Binding="{Binding ValueData}" Width="250"/>
+                            <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#e94560"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Remove Selected" Style="{StaticResource DangerButton}"
+                                Click="RegistryRemoveSelected_Click" Margin="0,0,8,0"/>
+                        <Button Content="Remove All Suspicious" Style="{StaticResource DangerButton}"
+                                Click="RegistryRemoveAllSuspicious_Click"/>
+                        <TextBlock x:Name="RegistryCountText" Foreground="#888"
+                                   VerticalAlignment="Center" Margin="16,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#0f3460" Padding="8,4">
+            <TextBlock x:Name="StatusText" Text="Ready. Run as Administrator for full functionality."
+                       Foreground="#888" FontSize="11"/>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SystemFileKiller.CLI/SystemFileKiller.CLI.csproj" />
+  <Project Path="SystemFileKiller.Core/SystemFileKiller.Core.csproj" />
+  <Project Path="SystemFileKiller.GUI/SystemFileKiller.GUI.csproj" />
+  <Project Path="SystemFileKiller.MCP/SystemFileKiller.MCP.csproj" />
+</Solution>

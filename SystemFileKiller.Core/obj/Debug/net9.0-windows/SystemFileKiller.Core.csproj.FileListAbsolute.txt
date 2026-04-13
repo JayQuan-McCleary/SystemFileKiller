@@ -1,0 +1,12 @@
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\bin\Debug\net9.0-windows\SystemFileKiller.Core.deps.json
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\bin\Debug\net9.0-windows\SystemFileKiller.Core.dll
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\bin\Debug\net9.0-windows\SystemFileKiller.Core.pdb
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.csproj.AssemblyReference.cache
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.GeneratedMSBuildEditorConfig.editorconfig
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.AssemblyInfoInputs.cache
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.AssemblyInfo.cs
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.csproj.CoreCompileInputs.cache
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.dll
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\refint\SystemFileKiller.Core.dll
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\SystemFileKiller.Core.pdb
+D:\.Work\.Projects\System File Killer\SystemFileKiller.Core\obj\Debug\net9.0-windows\ref\SystemFileKiller.Core.dll
