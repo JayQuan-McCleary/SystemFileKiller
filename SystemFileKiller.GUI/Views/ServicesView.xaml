@@ -1,0 +1,137 @@
+<UserControl x:Class="SystemFileKiller.GUI.Views.ServicesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource ScreenHeadBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Style="{StaticResource EyebrowText}" Text="MODE · 02"/>
+                    <TextBlock Style="{StaticResource ScreenTitle}" Text="Services"/>
+                    <TextBlock x:Name="SubText" Foreground="{DynamicResource Fg3}" FontSize="12" Margin="0,4,0,0" Text="0 services · 0 running"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Border Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line2}" BorderThickness="1" CornerRadius="2" Padding="8,3" Margin="0,0,8,0" Width="260">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="/" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="FilterBox" BorderThickness="0" Background="Transparent" Width="220" TextChanged="Filter_TextChanged"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Style="{StaticResource Btn}" Click="Refresh_Click" Content="Refresh"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Style="{StaticResource ToolbarBorder}">
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource BtnDanger}" Content="Stop service" Click="Stop_Click" x:Name="BtnStop" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource Btn}" Content="Start" Click="Start_Click" x:Name="BtnStart" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource Btn}" Content="Restart" Click="Restart_Click" x:Name="BtnRestart"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <CheckBox x:Name="ChkRunningOnly" Content="runningOnly" Click="RunningOnly_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="380"/>
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0" x:Name="Grid" SelectionMode="Single"
+                      SelectionChanged="Grid_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="STATUS" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Badge}" HorizontalAlignment="Left"
+                                        Background="{Binding StatusBg}" BorderBrush="{Binding StatusBorder}">
+                                    <TextBlock Text="{Binding StatusBadge}" Style="{StaticResource BadgeText}"
+                                               Foreground="{Binding StatusFg}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="SHORT NAME" Binding="{Binding Name}" Width="220">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Fg}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="DISPLAY NAME" Binding="{Binding DisplayName}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource Fg4}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="PID" Binding="{Binding PidDisplay}" Width="80">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Fg2}"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1" Style="{StaticResource DetailPaneBorder}">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="16,14,16,12">
+                        <StackPanel>
+                            <Border x:Name="DetStatusBadge" Style="{StaticResource Badge}" HorizontalAlignment="Left" Margin="0,0,0,8"
+                                    Background="Transparent" BorderBrush="{DynamicResource Line2}">
+                                <TextBlock x:Name="DetStatusText" Text="—" Style="{StaticResource BadgeText}" Foreground="{DynamicResource Fg3}"/>
+                            </Border>
+                            <TextBlock x:Name="DetName" Text="no selection" FontFamily="{StaticResource FontMono}" FontSize="14"/>
+                        </StackPanel>
+                    </Border>
+                    <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto" Padding="16,14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="88"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="DISPLAY" Style="{StaticResource DimMonoSmall}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DetDisplay" Foreground="{DynamicResource Fg}" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="PID" Style="{StaticResource DimMonoSmall}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DetPid" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="STATE" Style="{StaticResource DimMonoSmall}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DetState" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg}"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource PanelSectionTitle}" Text="NOTE"/>
+                            <TextBlock Foreground="{DynamicResource Fg3}" FontSize="12" TextWrapping="Wrap">
+                                <Run Text="Use the "/>
+                                <Run Foreground="{DynamicResource Fg}" Text="short name"/>
+                                <Run Text=" with "/>
+                                <Run FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource Accent2}" Text="sfk_service_stop"/>
+                                <Run Text=". SCM checks the service DACL — admins succeed even when the process DACL refuses."/>
+                            </TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

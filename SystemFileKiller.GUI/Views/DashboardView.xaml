@@ -1,0 +1,195 @@
+<UserControl x:Class="SystemFileKiller.GUI.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource ScreenHeadBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Style="{StaticResource EyebrowText}" Text="MODE · 00"/>
+                    <TextBlock Style="{StaticResource ScreenTitle}" Text="Operator overview"/>
+                    <TextBlock x:Name="SubText" Foreground="{DynamicResource Fg3}" FontSize="12" Margin="0,4,0,0"
+                               Text="System File Killer · session active"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Style="{StaticResource Btn}" Content="Refresh" Click="Refresh_Click" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource BtnPrimary}" Content="Full sweep" Click="FullSweep_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Style="{StaticResource StatStripBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0" Padding="16,10">
+                    <StackPanel>
+                        <TextBlock Text="PRIVILEGES" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10"/>
+                        <TextBlock x:Name="StatPriv" Text="—" FontFamily="{StaticResource FontMono}" FontSize="18" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="StatPrivSub" Text="—" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0" Padding="16,10">
+                    <StackPanel>
+                        <TextBlock Text="HELPER SERVICE" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10"/>
+                        <TextBlock x:Name="StatPipe" Text="—" FontFamily="{StaticResource FontMono}" FontSize="18" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="StatPipeSub" Text="\\.\pipe\sfk" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0" Padding="16,10">
+                    <StackPanel>
+                        <TextBlock Text="THREATS PRESENT" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10"/>
+                        <TextBlock x:Name="StatThreats" Text="—" Foreground="{DynamicResource Accent2}" FontFamily="{StaticResource FontMono}" FontSize="18" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="StatThreatsSub" Text="awaiting scan" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Padding="16,10">
+                    <StackPanel>
+                        <TextBlock Text="LAST SWEEP" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10"/>
+                        <TextBlock x:Name="StatLastSweep" Text="—" FontFamily="{StaticResource FontMono}" FontSize="18" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="StatLastSweepSub" Text="never" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="22,18,22,18">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Live threats card -->
+                <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="2" Padding="14" Margin="0,0,8,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource PanelSectionTitle}" Margin="0" Text="LIVE THREATS"/>
+                            <Border Grid.Column="1" Style="{StaticResource Badge}" Background="{DynamicResource AccentGlow}" BorderBrush="{DynamicResource Accent}">
+                                <TextBlock x:Name="ThreatsBadge" Text="0 active" Style="{StaticResource BadgeText}" Foreground="{DynamicResource Accent2}"/>
+                            </Border>
+                        </Grid>
+                        <ItemsControl x:Name="ThreatsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3" MinHeight="28">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="22"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="170"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="!" Foreground="{DynamicResource Accent2}" FontFamily="{StaticResource FontMono}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Subject}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Surface}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="3" Style="{StaticResource Badge}" HorizontalAlignment="Left"
+                                                Background="{DynamicResource AccentGlow}" BorderBrush="{DynamicResource Accent}" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Verdict}" Style="{StaticResource BadgeText}" Foreground="{DynamicResource Accent2}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="4" Text="" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="ThreatsEmpty" Visibility="Visible"
+                                   Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" FontSize="12"
+                                   HorizontalAlignment="Center" Padding="0,16"
+                                   Text="Run a full sweep to populate."/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Quick actions + ladder reference -->
+                <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="2" Padding="14" Margin="8,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Text="QUICK ACTIONS"/>
+                        <UniformGrid Columns="2">
+                            <Button Style="{StaticResource Btn}" Content="Processes" Click="GoProcesses_Click" Margin="0,0,4,4"/>
+                            <Button Style="{StaticResource Btn}" Content="Services"  Click="GoServices_Click"  Margin="4,0,0,4"/>
+                            <Button Style="{StaticResource Btn}" Content="Files"     Click="GoFiles_Click"     Margin="0,4,4,4"/>
+                            <Button Style="{StaticResource Btn}" Content="Registry"  Click="GoRegistry_Click"  Margin="4,4,0,4"/>
+                            <Button Style="{StaticResource Btn}" Content="Analyze"   Click="GoAnalyze_Click"   Margin="0,4,4,0"/>
+                            <Button Style="{StaticResource BtnDanger}" Content="Emergency" Click="Emergency_Click" Margin="4,4,0,0"/>
+                        </UniformGrid>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,18,0,8" Text="TIER LADDER REFERENCE"/>
+                        <StackPanel>
+                            <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="01" FontFamily="{StaticResource FontMono}" FontSize="10" Foreground="{DynamicResource Fg4}"/>
+                                <TextBlock Grid.Column="1" Text="Process.Kill()" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}"/>
+                                <TextBlock Grid.Column="2" Text="user-mode" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                            </Grid>
+                            <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="02" FontFamily="{StaticResource FontMono}" FontSize="10" Foreground="{DynamicResource Fg4}"/>
+                                <TextBlock Grid.Column="1" Text="NtTerminateProcess" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}"/>
+                                <TextBlock Grid.Column="2" Text="watchdog kill" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                            </Grid>
+                            <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="03" FontFamily="{StaticResource FontMono}" FontSize="10" Foreground="{DynamicResource Fg4}"/>
+                                <TextBlock Grid.Column="1" Text="SCM service stop" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}"/>
+                                <TextBlock Grid.Column="2" Text="service-hosted" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                            </Grid>
+                            <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="04" FontFamily="{StaticResource FontMono}" FontSize="10" Foreground="{DynamicResource Fg4}"/>
+                                <TextBlock Grid.Column="1" Text="Pipe \\.\pipe\sfk" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}"/>
+                                <TextBlock Grid.Column="2" Text="LocalSystem proxy" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                            </Grid>
+                            <Grid Margin="0,3"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="05" FontFamily="{StaticResource FontMono}" FontSize="10" Foreground="{DynamicResource Fg4}"/>
+                                <TextBlock Grid.Column="1" Text="UAC self-elevate" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}"/>
+                                <TextBlock Grid.Column="2" Text="last resort" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Recent ops console (full width) -->
+                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="2" Padding="14" Margin="0,0,0,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Text="RECENT OPERATIONS"/>
+                        <Border Style="{StaticResource ConsoleBorder}" MaxHeight="220">
+                            <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="LogList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontFamily="{StaticResource FontMono}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,2">
+                                                <Run Text="{Binding TimestampDisplay, Mode=OneWay}" Foreground="{DynamicResource Fg4}"/>
+                                                <Run Text=" "/>
+                                                <Run Text="{Binding KindDisplay, Mode=OneWay}" Foreground="{Binding KindBrush}"/>
+                                                <Run Text=" "/>
+                                                <Run Text="{Binding Text, Mode=OneWay}" Foreground="{DynamicResource Fg2}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

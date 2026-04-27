@@ -55,17 +55,20 @@ public static class PipeClient
     private static async Task<PipeResponse> SendOnStreamAsync(
         NamedPipeClientStream client, PipeRequest req, CancellationToken ct)
     {
+        // ConfigureAwait(false) on every await — callers may use
+        // `.GetAwaiter().GetResult()` from a UI thread; without this the continuation
+        // deadlocks waiting for the UI thread that's blocked on GetResult.
         var json = JsonSerializer.Serialize(req);
         var bytes = Encoding.UTF8.GetBytes(json + "\n");
-        await client.WriteAsync(bytes, ct);
-        await client.FlushAsync(ct);
+        await client.WriteAsync(bytes, ct).ConfigureAwait(false);
+        await client.FlushAsync(ct).ConfigureAwait(false);
 
         using var ms = new MemoryStream();
         var buf = new byte[4096];
         while (true)
         {
             ct.ThrowIfCancellationRequested();
-            int n = await client.ReadAsync(buf, ct);
+            int n = await client.ReadAsync(buf, ct).ConfigureAwait(false);
             if (n == 0) break;
             ms.Write(buf, 0, n);
             var data = ms.GetBuffer();

@@ -12,6 +12,13 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Resources\sfk.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embed the icon as a resource so the Window.Icon binding works at runtime
+         (taskbar + alt-tab + window chrome use this). -->
+    <Resource Include="Resources\sfk.ico" />
+  </ItemGroup>
 
 </Project>
