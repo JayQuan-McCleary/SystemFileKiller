@@ -13,6 +13,9 @@ public record ProcessInfo(
 public enum KillResult
 {
     Success,
+    StoppedViaService,
+    StoppedViaPipeService,
+    StoppedViaUac,
     NotFound,
     AccessDenied,
     Failed
@@ -20,6 +23,12 @@ public enum KillResult
 
 public static class ProcessKiller
 {
+    static ProcessKiller()
+    {
+        // Best-effort: enable SeDebugPrivilege when elevated. No-op when running as a standard user.
+        PrivilegeManager.TryEnableDebugPrivilege();
+    }
+
     /// <summary>
     /// Lists all running processes with relevant details.
     /// </summary>
@@ -59,13 +68,21 @@ public static class ProcessKiller
     }
 
     /// <summary>
-    /// Force-kills a process by PID. Escalates through multiple termination methods.
+    /// Force-kills a process by PID. Walks the escalation ladder: Process.Kill → NtTerminate →
+    /// service stop → pipe service → UAC. Returns on first success.
     /// </summary>
     public static KillResult ForceKill(int pid, bool killTree = false)
+        => ForceKill(pid, killTree, new KillEscalation());
+
+    /// <summary>
+    /// Force-kills a process with caller-supplied escalation options. The same instance receives
+    /// per-stage trace breadcrumbs.
+    /// </summary>
+    public static KillResult ForceKill(int pid, bool killTree, KillEscalation esc)
     {
         if (killTree)
         {
-            KillProcessTree(pid);
+            KillProcessTree(pid, esc);
         }
 
         // Stage 1: Normal Process.Kill()
@@ -74,13 +91,78 @@ public static class ProcessKiller
             var proc = Process.GetProcessById(pid);
             proc.Kill();
             proc.WaitForExit(3000);
-            if (proc.HasExited) return KillResult.Success;
+            if (proc.HasExited)
+            {
+                esc.Note("Stage1:Process.Kill:Success");
+                return KillResult.Success;
+            }
+            esc.Note("Stage1:Process.Kill:DidNotExit");
         }
-        catch (ArgumentException) { return KillResult.NotFound; }
-        catch { /* Escalate */ }
+        catch (ArgumentException)
+        {
+            esc.Note("Stage1:Process.Kill:NotFound");
+            return KillResult.NotFound;
+        }
+        catch (Exception ex)
+        {
+            esc.Note($"Stage1:Process.Kill:Exception:{ex.GetType().Name}");
+        }
 
         // Stage 2: Suspend all threads, then NtTerminateProcess
-        return NtForceKill(pid);
+        var ntResult = NtForceKill(pid);
+        esc.Note($"Stage2:NtTerminate:{ntResult}");
+        if (ntResult == KillResult.Success || !IsAlive(pid)) return KillResult.Success;
+
+        // Stage 3: Service stop via SCM. Catches the entire Dell/Adobe/Razer wall — SCM uses the
+        // *service* DACL, not the *process* DACL.
+        foreach (var svc in ServiceManager.GetServicesByPid(pid))
+        {
+            var sr = ServiceManager.StopService(svc);
+            esc.Note($"Stage3:StopService:{svc}:{sr}");
+            if ((sr == ServiceOpResult.Success || sr == ServiceOpResult.AlreadyInTargetState) && !IsAlive(pid))
+                return KillResult.StoppedViaService;
+        }
+
+        // Stage 4: Forward to LocalSystem helper service via named pipe (no UAC prompt path)
+        if (esc.AllowPipeService)
+        {
+            if (PipeClient.IsServiceAvailable())
+            {
+                var resp = PipeClient.Send(new PipeRequest
+                {
+                    Cmd = PipeProtocol.Commands.KillProcess,
+                    Pid = pid,
+                    KillTree = killTree
+                });
+                esc.Note($"Stage4:PipeService:{(resp.Ok ? "ok" : resp.Error ?? "failed")}");
+                if (resp.Ok && !IsAlive(pid)) return KillResult.StoppedViaPipeService;
+            }
+            else
+            {
+                esc.Note("Stage4:PipeService:unavailable");
+            }
+        }
+
+        // Stage 5: UAC self-elevate (opt-in)
+        if (esc.AllowUacElevation && !PrivilegeManager.IsElevated)
+        {
+            var er = ElevationHelper.ElevateAndKill(pid, killTree);
+            esc.Note($"Stage5:UacElevate:{(er.Ok ? "ok" : er.Error ?? "failed")}");
+            if (er.Ok && !IsAlive(pid)) return KillResult.StoppedViaUac;
+        }
+        else if (esc.AllowUacElevation)
+        {
+            esc.Note("Stage5:UacElevate:alreadyElevated");
+        }
+
+        // If something else outside our visibility took it down, count that.
+        if (!IsAlive(pid))
+        {
+            esc.Note("Final:VerifiedDead");
+            return KillResult.Success;
+        }
+
+        return KillResult.AccessDenied;
     }
 
     /// <summary>
@@ -103,6 +185,31 @@ public static class ProcessKiller
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// True if a process with the given PID is still running. Errs on the side of "alive" when
+    /// uncertain — otherwise the ladder would short-circuit to Success on AccessDenied during
+    /// status queries.
+    /// </summary>
+    private static bool IsAlive(int pid)
+    {
+        // Ground truth that doesn't need a process handle: enumerate all PIDs.
+        try
+        {
+            foreach (var p in Process.GetProcesses())
+            {
+                bool match = p.Id == pid;
+                p.Dispose();
+                if (match) return true;
+            }
+            return false;
+        }
+        catch
+        {
+            // If even the enumeration fails, assume alive.
+            return true;
+        }
     }
 
     /// <summary>
@@ -144,7 +251,7 @@ public static class ProcessKiller
     /// <summary>
     /// Kill all child processes of the given PID (bottom-up), then the parent.
     /// </summary>
-    private static void KillProcessTree(int parentPid)
+    private static void KillProcessTree(int parentPid, KillEscalation esc)
     {
         try
         {
@@ -155,8 +262,8 @@ public static class ProcessKiller
             foreach (ManagementObject obj in searcher.Get())
             {
                 var childPid = Convert.ToInt32(obj["ProcessId"]);
-                KillProcessTree(childPid); // Recurse into children first
-                ForceKill(childPid, false); // Then kill this child
+                KillProcessTree(childPid, esc); // Recurse into children first
+                ForceKill(childPid, false, esc); // Then kill this child (share trace + flags)
             }
         }
         catch

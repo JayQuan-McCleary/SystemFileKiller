@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SystemFileKiller.Service</RootNamespace>
+    <AssemblyName>SystemFileKiller.Service</AssemblyName>
+    <UserSecretsId>sfk-service-7e3a8b2f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SystemFileKiller.Core\SystemFileKiller.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
+    <!-- Transitive of Microsoft.Extensions.Logging.EventLog (auto-added by AddWindowsService);
+         publish doesn't pick it up via the Worker SDK on its own, so reference it directly. -->
+    <PackageReference Include="System.Threading.AccessControl" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

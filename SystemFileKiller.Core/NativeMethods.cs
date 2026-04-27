@@ -15,6 +15,12 @@ internal static class NativeMethods
     internal const uint PROCESS_SUSPEND_RESUME = 0x0800;
     internal const uint PROCESS_ALL_ACCESS = 0x001F0FFF;
 
+    // ── Token access rights ──
+    internal const uint TOKEN_QUERY = 0x0008;
+    internal const uint TOKEN_ADJUST_PRIVILEGES = 0x0020;
+    internal const uint SE_PRIVILEGE_ENABLED = 0x0002;
+    internal const string SE_DEBUG_NAME = "SeDebugPrivilege";
+
     // ── Duplicate object options ──
     internal const uint DUPLICATE_CLOSE_SOURCE = 0x00000001;
     internal const uint DUPLICATE_SAME_ACCESS = 0x00000002;
@@ -64,6 +70,27 @@ internal static class NativeMethods
     {
         public UNICODE_STRING TypeName;
         // There are more fields but we only need TypeName
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct LUID
+    {
+        public uint LowPart;
+        public int HighPart;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct LUID_AND_ATTRIBUTES
+    {
+        public LUID Luid;
+        public uint Attributes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct TOKEN_PRIVILEGES
+    {
+        public uint PrivilegeCount;
+        public LUID_AND_ATTRIBUTES Privilege; // single-privilege variant; PrivilegeCount must be 1
     }
 
     // ── ntdll.dll ──
@@ -128,4 +155,30 @@ internal static class NativeMethods
 
     [DllImport("kernel32.dll")]
     internal static extern IntPtr GetCurrentProcess();
+
+    // ── advapi32.dll (token privileges) ──
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool OpenProcessToken(
+        IntPtr ProcessHandle,
+        uint DesiredAccess,
+        out IntPtr TokenHandle);
+
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool LookupPrivilegeValue(
+        string? lpSystemName,
+        string lpName,
+        out LUID lpLuid);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool AdjustTokenPrivileges(
+        IntPtr TokenHandle,
+        [MarshalAs(UnmanagedType.Bool)] bool DisableAllPrivileges,
+        ref TOKEN_PRIVILEGES NewState,
+        uint BufferLength,
+        IntPtr PreviousState,
+        IntPtr ReturnLength);
 }
