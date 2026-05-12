@@ -1,0 +1,126 @@
+<UserControl x:Class="SystemFileKiller.GUI.Views.BatchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="180"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource ScreenHeadBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource EyebrowText}" Text="MODE · 08"/>
+                <TextBlock Style="{StaticResource ScreenTitle}" Text="Batch Builder"/>
+                <TextBlock Foreground="{DynamicResource Fg3}" FontSize="12" Margin="0,4,0,0"
+                           Text="Click ops on the left to queue them. Edit parameters in the row. Hit Run to dispatch the entire sequence in one pipe call."/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Background="{DynamicResource Bg2}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="22,10">
+            <StackPanel Orientation="Horizontal">
+                <CheckBox x:Name="DryRunCheck" Content="dry-run preview"
+                          Foreground="{DynamicResource Fg2}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <CheckBox x:Name="StopOnErrorCheck" Content="stop on first failure"
+                          Foreground="{DynamicResource Fg2}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <Button Style="{StaticResource Btn}" Content="Move Up" Click="MoveUp_Click" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource Btn}" Content="Move Down" Click="MoveDown_Click" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource Btn}" Content="Remove" Click="Remove_Click" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource Btn}" Content="Clear All" Click="Clear_Click" Margin="0,0,8,0"/>
+                <Button Style="{StaticResource BtnDanger}" Content="RUN BATCH" Click="Run_Click" Margin="0,0,8,0" Padding="14,4"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0" Padding="14,16">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,0,0,6" Text="PROCESSES"/>
+                        <Button Style="{StaticResource Btn}" Tag="kill_process" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ kill_process (pid)"/>
+                        <Button Style="{StaticResource Btn}" Tag="kill_process_by_name" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ kill_process_by_name"/>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,12,0,6" Text="SERVICES"/>
+                        <Button Style="{StaticResource Btn}" Tag="stop_service" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ stop_service"/>
+                        <Button Style="{StaticResource Btn}" Tag="disable_service" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ disable_service"/>
+                        <Button Style="{StaticResource Btn}" Tag="delete_service" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ delete_service"/>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,12,0,6" Text="FILES"/>
+                        <Button Style="{StaticResource Btn}" Tag="delete_file" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ delete_file"/>
+                        <Button Style="{StaticResource Btn}" Tag="delete_dir" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ delete_dir"/>
+                        <Button Style="{StaticResource Btn}" Tag="quarantine_file" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ quarantine_file"/>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,12,0,6" Text="TASKS"/>
+                        <Button Style="{StaticResource Btn}" Tag="task_disable" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ task_disable"/>
+                        <Button Style="{StaticResource Btn}" Tag="task_delete" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ task_delete"/>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,12,0,6" Text="REGISTRY"/>
+                        <Button Style="{StaticResource Btn}" Tag="registry_remove_key" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ registry_remove_key"/>
+                        <Button Style="{StaticResource Btn}" Tag="registry_remove_value" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ registry_remove_value"/>
+
+                        <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,12,0,6" Text="OTHER"/>
+                        <Button Style="{StaticResource Btn}" Tag="hosts_remove_pattern" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ hosts_remove_pattern"/>
+                        <Button Style="{StaticResource Btn}" Tag="restore_point_create" Click="AddOp_Click" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="10,5" Content="+ restore_point_create"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <Grid Grid.Column="1" Margin="22,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Style="{StaticResource PanelSectionTitle}" Margin="0,0,0,8" Text="QUEUE — runs top-to-bottom"/>
+                <Border Grid.Row="1" Style="{StaticResource ConsoleBorder}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ListBox x:Name="QueueList" Background="Transparent" BorderThickness="0" SelectionMode="Single" HorizontalContentAlignment="Stretch">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,2" Padding="8,6" Background="{DynamicResource Panel2}" BorderBrush="{DynamicResource Line2}" BorderThickness="1" CornerRadius="3">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36"/>
+                                                <ColumnDefinition Width="170"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="72"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding IndexLabel}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Cmd}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{Binding CmdBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox Grid.Column="2" Text="{Binding Params, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource FontMono}" FontSize="11" Background="{DynamicResource Bg2}" Foreground="{DynamicResource Fg2}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="6,3" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Result}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{Binding ResultBrush}" VerticalAlignment="Center" TextAlignment="Right" Margin="6,0,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="3" Background="{DynamicResource ConsoleBg}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="22,10">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource PanelSectionTitle}" Foreground="{DynamicResource Fg3}" Margin="0,0,0,4" Text="CONSOLE"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ConsoleList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock FontFamily="{StaticResource FontMono}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,2">
+                                    <Run Text="{Binding Timestamp, StringFormat='[{0:HH:mm:ss}]'}" Foreground="{DynamicResource Fg4}"/>
+                                    <Run Text="{Binding Kind}" Foreground="{Binding KindBrush}"/>
+                                    <Run Text="{Binding Text}" Foreground="{DynamicResource Fg2}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

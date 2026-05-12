@@ -51,4 +51,32 @@ public class ServiceTools
             services = names
         });
     }
+
+    [McpServerTool(Name = "sfk_service_disable")]
+    [Description("Set a service's StartType to Disabled so it doesn't auto-start at next boot. Pure registry write at HKLM\\SYSTEM\\CurrentControlSet\\Services\\<name>\\Start = 4. Does NOT stop a currently-running service — pair with sfk_service_stop for a complete shutdown. Reversible by setting Start back to 2 (Auto) or 3 (Manual). Requires admin.")]
+    public static string DisableService([Description("Service short name (Win32_Service.Name)")] string name)
+    {
+        var r = ServiceManager.DisableService(name);
+        return JsonSerializer.Serialize(new
+        {
+            name,
+            result = r.ToString(),
+            success = r is ServiceOpResult.Success or ServiceOpResult.AlreadyInTargetState
+        });
+    }
+
+    [McpServerTool(Name = "sfk_service_delete")]
+    [Description("Stop (if running) then deregister a service via sc.exe delete. Removes the SCM record so the service no longer exists — the registry-level equivalent of an uninstaller's final cleanup step. Use after the service binary has been deleted/quarantined. Requires admin.")]
+    public static string DeleteService(
+        [Description("Service short name")] string name,
+        [Description("Stop wait timeout in seconds")] int timeoutSec = 15)
+    {
+        var r = ServiceManager.DeleteService(name, timeoutSec);
+        return JsonSerializer.Serialize(new
+        {
+            name,
+            result = r.ToString(),
+            success = r is ServiceOpResult.Success or ServiceOpResult.AlreadyInTargetState
+        });
+    }
 }

@@ -114,6 +114,62 @@ public static class ServiceManager
         catch { return ServiceOpResult.Failed; }
     }
 
+    /// <summary>
+    /// Set the service start type to Disabled so it doesn't come back on next boot. Pure registry
+    /// write at <c>HKLM\SYSTEM\CurrentControlSet\Services\&lt;name&gt;\Start = 4</c>. Does NOT stop
+    /// the service — pair with <see cref="StopService"/> for a full disable.
+    /// </summary>
+    public static ServiceOpResult DisableService(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return ServiceOpResult.NotFound;
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+                $@"SYSTEM\CurrentControlSet\Services\{name}", writable: true);
+            if (key is null) return ServiceOpResult.NotFound;
+            key.SetValue("Start", 4, Microsoft.Win32.RegistryValueKind.DWord);
+            return ServiceOpResult.Success;
+        }
+        catch (System.Security.SecurityException) { return ServiceOpResult.AccessDenied; }
+        catch (UnauthorizedAccessException) { return ServiceOpResult.AccessDenied; }
+        catch { return ServiceOpResult.Failed; }
+    }
+
+    /// <summary>
+    /// Stop (if running) then deregister the service via <c>sc.exe delete</c>. Equivalent to the
+    /// final stage of an uninstaller — removes the SCM record so the service no longer exists.
+    /// </summary>
+    public static ServiceOpResult DeleteService(string name, int timeoutSec = 15)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return ServiceOpResult.NotFound;
+
+        var stopResult = StopService(name, timeoutSec);
+        if (stopResult == ServiceOpResult.NotFound) return ServiceOpResult.NotFound;
+        // Continue past AccessDenied/Timeout — sc delete may still succeed if SCM has marked it stopping.
+
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("sc.exe", $"delete \"{name}\"")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            using var p = System.Diagnostics.Process.Start(psi)!;
+            p.WaitForExit(timeoutSec * 1000);
+            return p.ExitCode switch
+            {
+                0 => ServiceOpResult.Success,
+                1060 => ServiceOpResult.NotFound,
+                5 => ServiceOpResult.AccessDenied,
+                _ => ServiceOpResult.Failed
+            };
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 5) { return ServiceOpResult.AccessDenied; }
+        catch { return ServiceOpResult.Failed; }
+    }
+
     public static ServiceOpResult StartService(string name, int timeoutSec = 15)
     {
         try

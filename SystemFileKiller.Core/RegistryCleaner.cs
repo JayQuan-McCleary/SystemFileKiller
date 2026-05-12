@@ -225,6 +225,123 @@ public static class RegistryCleaner
             return (Registry.LocalMachine, hivePath[5..]);
         if (hivePath.StartsWith("HKCU\\"))
             return (Registry.CurrentUser, hivePath[5..]);
+        if (hivePath.StartsWith("HKCR\\"))
+            return (Registry.ClassesRoot, hivePath[5..]);
+        if (hivePath.StartsWith("HKU\\"))
+            return (Registry.Users, hivePath[4..]);
+        if (hivePath.StartsWith("HKCC\\"))
+            return (Registry.CurrentConfig, hivePath[5..]);
         return (null, hivePath);
+    }
+
+    /// <summary>
+    /// Refuse to operate on system-critical registry roots. Mirrors the file-system protected
+    /// path list — without this the helper service could brick the OS on bad input.
+    /// </summary>
+    public static bool IsProtectedKey(string hivePath, out string reason)
+    {
+        reason = "";
+        if (string.IsNullOrWhiteSpace(hivePath)) { reason = "empty path"; return true; }
+
+        var trimmed = hivePath.TrimEnd('\\');
+        var upper = trimmed.ToUpperInvariant();
+
+        // Roots themselves
+        string[] roots = { "HKLM", "HKCU", "HKCR", "HKU", "HKCC",
+                           "HKEY_LOCAL_MACHINE", "HKEY_CURRENT_USER", "HKEY_CLASSES_ROOT",
+                           "HKEY_USERS", "HKEY_CURRENT_CONFIG" };
+        if (roots.Contains(upper)) { reason = "registry hive root"; return true; }
+
+        // System-critical subtrees
+        string[] forbidden = {
+            @"HKLM\SAM", @"HKLM\SECURITY", @"HKLM\HARDWARE",
+            @"HKLM\SYSTEM\CurrentControlSet\Control\Lsa",
+            @"HKLM\SYSTEM\Setup",
+            @"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",
+        };
+        foreach (var f in forbidden)
+        {
+            if (upper.StartsWith(f.ToUpperInvariant() + "\\") || upper == f.ToUpperInvariant())
+            {
+                reason = $"under {f}";
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Delete an entire registry key (and its subtree). Use for uninstall stubs, malware
+    /// persistence containers, service entries. Refuses to touch <see cref="IsProtectedKey"/> roots.
+    /// </summary>
+    public static (bool Ok, string Message) RemoveKey(string hivePath)
+    {
+        if (IsProtectedKey(hivePath, out var reason)) return (false, $"Refused: {reason}");
+        try
+        {
+            var (hive, subPath) = ParseHivePath(hivePath);
+            if (hive is null) return (false, $"Unknown hive in: {hivePath}");
+            using var probe = hive.OpenSubKey(subPath, writable: false);
+            if (probe is null) return (true, "key already absent");
+            hive.DeleteSubKeyTree(subPath, throwOnMissingSubKey: false);
+            return (true, $"removed key: {hivePath}");
+        }
+        catch (System.Security.SecurityException) { return (false, "access denied (try elevated)"); }
+        catch (UnauthorizedAccessException) { return (false, "access denied (try elevated)"); }
+        catch (Exception ex) { return (false, ex.Message); }
+    }
+
+    /// <summary>
+    /// Delete a single value under any registry key. Use for surgical removal of one Run entry,
+    /// one ImagePath, etc. without nuking the whole key.
+    /// </summary>
+    public static (bool Ok, string Message) RemoveValue(string hivePath, string valueName)
+    {
+        if (IsProtectedKey(hivePath, out var reason)) return (false, $"Refused: {reason}");
+        if (valueName is null) return (false, "value name required (use empty string for default)");
+        try
+        {
+            var (hive, subPath) = ParseHivePath(hivePath);
+            if (hive is null) return (false, $"Unknown hive in: {hivePath}");
+            using var key = hive.OpenSubKey(subPath, writable: true);
+            if (key is null) return (true, "key absent — value already gone");
+            if (!key.GetValueNames().Contains(valueName)) return (true, "value already absent");
+            key.DeleteValue(valueName, throwOnMissingValue: false);
+            return (true, $"removed value: {hivePath}\\{valueName}");
+        }
+        catch (System.Security.SecurityException) { return (false, "access denied (try elevated)"); }
+        catch (UnauthorizedAccessException) { return (false, "access denied (try elevated)"); }
+        catch (Exception ex) { return (false, ex.Message); }
+    }
+
+    /// <summary>
+    /// Write a registry value. Used to neutralize hijacks by overwriting (e.g. replacing a
+    /// malicious Shell or Userinit value with the legitimate one) rather than deleting and
+    /// breaking the host. Creates the key if missing. <paramref name="kind"/> defaults to String.
+    /// </summary>
+    public static (bool Ok, string Message) SetValue(string hivePath, string valueName, string value, RegistryValueKind kind = RegistryValueKind.String)
+    {
+        if (IsProtectedKey(hivePath, out var reason)) return (false, $"Refused: {reason}");
+        try
+        {
+            var (hive, subPath) = ParseHivePath(hivePath);
+            if (hive is null) return (false, $"Unknown hive in: {hivePath}");
+            using var key = hive.CreateSubKey(subPath, writable: true);
+            if (key is null) return (false, $"could not open or create: {hivePath}");
+
+            object converted = kind switch
+            {
+                RegistryValueKind.DWord => int.TryParse(value, out var i) ? (object)i : 0,
+                RegistryValueKind.QWord => long.TryParse(value, out var l) ? (object)l : 0L,
+                RegistryValueKind.Binary => Convert.FromHexString(value.Replace(" ", "").Replace("-", "")),
+                RegistryValueKind.MultiString => value.Split('\n').Select(s => s.TrimEnd('\r')).ToArray(),
+                _ => value
+            };
+            key.SetValue(valueName, converted, kind);
+            return (true, $"set: {hivePath}\\{valueName} = {value} ({kind})");
+        }
+        catch (System.Security.SecurityException) { return (false, "access denied (try elevated)"); }
+        catch (UnauthorizedAccessException) { return (false, "access denied (try elevated)"); }
+        catch (Exception ex) { return (false, ex.Message); }
     }
 }

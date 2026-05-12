@@ -4,17 +4,37 @@ namespace SystemFileKiller.Core;
 
 public static class HandleUtils
 {
+    // GrantedAccess values that historically deadlock NtQueryObject(ObjectNameInformation).
+    // Pulled from Process Hacker / NtQueryObject deadlock research. Synchronous pipe handles
+    // with certain access masks can block the query thread for the kernel's default timeout
+    // (~30s) or indefinitely. Skip them outright — we don't care about pipe handles for
+    // file-deletion purposes anyway.
+    private static readonly HashSet<uint> DangerousGrantedAccess = new()
+    {
+        0x0012019Fu,
+        0x001A019Fu,
+        0x00120189u,
+        0x00100000u,
+        0x0016019Fu,
+    };
+
     /// <summary>
     /// Finds all open handles to a specific file path across all processes.
-    /// Returns list of (ProcessId, HandleValue) tuples.
+    /// Optionally accepts a pre-enumerated handle table to avoid re-scanning the
+    /// system handle list once per file in batch operations.
     /// </summary>
     public static List<(int ProcessId, IntPtr Handle)> FindHandlesForFile(string filePath)
+        => FindHandlesForFile(filePath, null);
+
+    internal static List<(int ProcessId, IntPtr Handle)> FindHandlesForFile(
+        string filePath,
+        IReadOnlyList<NativeMethods.SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX>? cachedHandles)
     {
         var results = new List<(int, IntPtr)>();
         var normalizedTarget = NormalizePathToNt(filePath);
         if (normalizedTarget == null) return results;
 
-        var handles = EnumerateAllHandles();
+        var handles = cachedHandles ?? EnumerateAllHandles();
         var currentPid = Environment.ProcessId;
         var currentProcess = NativeMethods.GetCurrentProcess();
 
@@ -22,6 +42,10 @@ public static class HandleUtils
         {
             var pid = (int)entry.UniqueProcessId.ToUInt64();
             if (pid == currentPid || pid == 0 || pid == 4) continue;
+
+            // Cheap skip BEFORE we touch the handle — avoids the NtQueryObject deadlock entirely
+            // for the known-dangerous access masks.
+            if (DangerousGrantedAccess.Contains(entry.GrantedAccess)) continue;
 
             IntPtr processHandle = IntPtr.Zero;
             IntPtr dupHandle = IntPtr.Zero;
@@ -43,12 +67,12 @@ public static class HandleUtils
 
                 if (status != NativeMethods.STATUS_SUCCESS || dupHandle == IntPtr.Zero) continue;
 
-                // Check if it's a File type handle
+                // Type query is fast and bounded — safe to call directly.
                 var typeName = GetObjectType(dupHandle);
                 if (typeName != "File") continue;
 
-                // Get the file name
-                var name = GetObjectName(dupHandle);
+                // Name query is the dangerous one. Wrap it.
+                var name = GetObjectNameSafe(dupHandle, timeoutMs: 200);
                 if (name != null && name.Equals(normalizedTarget, StringComparison.OrdinalIgnoreCase))
                 {
                     results.Add((pid, (IntPtr)entry.HandleValue));
@@ -160,6 +184,30 @@ public static class HandleUtils
         }
 
         return handles;
+    }
+
+    /// <summary>
+    /// NtQueryObject(ObjectNameInformation) can deadlock indefinitely on certain pipe handles
+    /// even after the GrantedAccess pre-filter — kernel-mode driver behaviour, no clean fix.
+    /// Run the query on a dedicated thread and abandon it if it doesn't complete in time.
+    /// The leaked thread will eventually unblock when the kernel returns; cost is bounded.
+    /// </summary>
+    private static string? GetObjectNameSafe(IntPtr handle, int timeoutMs)
+    {
+        string? result = null;
+        var done = new ManualResetEventSlim(false);
+        var t = new Thread(() =>
+        {
+            try { result = GetObjectName(handle); }
+            catch { /* swallow */ }
+            finally { done.Set(); }
+        })
+        {
+            IsBackground = true,
+            Name = "SFK.NtQueryObject.Timeout"
+        };
+        t.Start();
+        return done.Wait(timeoutMs) ? result : null;
     }
 
     private static string? GetObjectName(IntPtr handle)

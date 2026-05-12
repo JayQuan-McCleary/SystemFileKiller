@@ -1,0 +1,102 @@
+<UserControl x:Class="SystemFileKiller.GUI.Views.PersistenceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource ScreenHeadBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource EyebrowText}" Text="MODE · 13"/>
+                <TextBlock Style="{StaticResource ScreenTitle}" Text="Persistence"/>
+                <TextBlock Foreground="{DynamicResource Fg3}" FontSize="12" Margin="0,4,0,0"
+                           Text="WMI event subscriptions, hosts file edits, and System Restore checkpoints."/>
+            </StackPanel>
+        </Border>
+
+        <TabControl Grid.Row="1" Background="{DynamicResource Bg}" BorderBrush="{DynamicResource Line}" Margin="0">
+            <TabItem Header="WMI Subscriptions">
+                <Grid Margin="22,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Style="{StaticResource Btn}" Content="Scan" Click="WmiScan_Click" Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource BtnDanger}" Content="Remove Selected" Click="WmiRemove_Click" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="WmiCount" Text="not scanned" Foreground="{DynamicResource Fg3}" FontFamily="{StaticResource FontMono}" FontSize="11" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" x:Name="WmiGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="{DynamicResource Bg}" Foreground="{DynamicResource Fg2}"
+                              RowBackground="{DynamicResource Bg}" AlternatingRowBackground="{DynamicResource Bg2}"
+                              BorderBrush="{DynamicResource Line}" GridLinesVisibility="None"
+                              HeadersVisibility="Column" SelectionMode="Extended">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Filter" Binding="{Binding FilterName}" Width="160"/>
+                            <DataGridTextColumn Header="Consumer" Binding="{Binding ConsumerName}" Width="160"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding ConsumerType}" Width="180"/>
+                            <DataGridTextColumn Header="Command / Path" Binding="{Binding CmdOrPath}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Hosts File">
+                <Grid Margin="22,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Style="{StaticResource Btn}" Content="Refresh" Click="HostsRefresh_Click" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="HostsCount" Text="—" Foreground="{DynamicResource Fg3}" FontFamily="{StaticResource FontMono}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Pattern (regex):" Foreground="{DynamicResource Fg3}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="HostsPatternBox" Width="240" Background="{DynamicResource Panel}" Foreground="{DynamicResource Fg2}" BorderBrush="{DynamicResource Line2}" Padding="6,3" VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource BtnDanger}" Content="Remove Matching" Click="HostsRemove_Click" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" x:Name="HostsGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="{DynamicResource Bg}" Foreground="{DynamicResource Fg2}"
+                              RowBackground="{DynamicResource Bg}" AlternatingRowBackground="{DynamicResource Bg2}"
+                              BorderBrush="{DynamicResource Line}" GridLinesVisibility="None"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" Width="50"/>
+                            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="160"/>
+                            <DataGridTextColumn Header="Hostname" Binding="{Binding Hostname}" Width="*"/>
+                            <DataGridTextColumn Header="Comment" Binding="{Binding Comment}" Width="200"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Restore Points">
+                <StackPanel Margin="22,16">
+                    <TextBlock Foreground="{DynamicResource Fg3}" TextWrapping="Wrap" Margin="0,0,0,12"
+                               Text="Create a System Restore checkpoint before destructive cleanups. Requires admin and System Protection enabled on C:."/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line2}" BorderThickness="1" CornerRadius="2" Padding="10,5">
+                            <TextBox x:Name="RpDescBox" Text="SFK checkpoint" BorderThickness="0" Background="Transparent"/>
+                        </Border>
+                        <Button Grid.Column="1" Style="{StaticResource Btn}" Content="Create Checkpoint" Click="RpCreate_Click" Margin="8,0,0,0"/>
+                    </Grid>
+                    <Border Style="{StaticResource ConsoleBorder}" Margin="0,16,0,0" MinHeight="120">
+                        <ScrollViewer Padding="16,12" VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="RpStatus" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}" TextWrapping="Wrap" Text="—"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

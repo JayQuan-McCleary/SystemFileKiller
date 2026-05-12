@@ -1,0 +1,130 @@
+<UserControl x:Class="SystemFileKiller.GUI.Views.NukeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource Bg}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource ScreenHeadBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource EyebrowText}" Text="MODE · 07"/>
+                <TextBlock Style="{StaticResource ScreenTitle}" Text="Nuke"/>
+                <TextBlock Foreground="{DynamicResource Fg3}" FontSize="12" Margin="0,4,0,0"
+                           Text="One-call removal — discovers processes / services / tasks / registry stubs / files for a target, then runs the cleanup as a single batch."/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Background="{DynamicResource Bg2}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="22,14,22,16">
+            <StackPanel>
+                <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,0,0,8" Text="TARGET IDENTIFIER (process name, install path, or display-name fragment)"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Line2}" BorderThickness="1" CornerRadius="2" Padding="10,5">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="▸" Foreground="{DynamicResource Fg4}" FontFamily="{StaticResource FontMono}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="IdentifierBox" BorderThickness="0" Background="Transparent" MinWidth="200"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <WrapPanel Margin="0,12,0,0">
+                    <Button Style="{StaticResource Btn}" Content="Plan (no action)" Click="Plan_Click" Margin="0,0,8,8"/>
+                    <Button Style="{StaticResource Btn}" Content="Dry-run (preview)" Click="DryRun_Click" Margin="0,0,8,8"/>
+                    <Button Style="{StaticResource BtnDanger}" Content="EXECUTE (destructive)" Click="Execute_Click" Margin="0,0,8,8"/>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="380"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0" Margin="22,16,11,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Style="{StaticResource PanelSectionTitle}" Text="FINDINGS"/>
+                <Border Grid.Row="1" Style="{StaticResource ConsoleBorder}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="FindingsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="115"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Kind}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{Binding KindBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Detail}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Column="1" Margin="11,16,11,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Style="{StaticResource PanelSectionTitle}" Text="PLANNED OPS"/>
+                <Border Grid.Row="1" Style="{StaticResource ConsoleBorder}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="OpsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="60"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Index}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg4}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Summary}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg2}" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Result}" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{Binding ResultBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <Border Grid.Column="2" Style="{StaticResource DetailPaneBorder}" Margin="11,16,22,16">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="16,14,16,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource PanelSectionTitle}" Margin="0,0,0,6" Text="STATUS"/>
+                            <TextBlock x:Name="StatusBlock" FontFamily="{StaticResource FontMono}" FontSize="11" Foreground="{DynamicResource Fg3}" TextWrapping="Wrap" Text="—"/>
+                        </StackPanel>
+                    </Border>
+                    <ScrollViewer Padding="16,14" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ConsoleList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontFamily="{StaticResource FontMono}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,2">
+                                        <Run Text="{Binding Timestamp, StringFormat='[{0:HH:mm:ss}]'}" Foreground="{DynamicResource Fg4}"/>
+                                        <Run Text="{Binding Kind}" Foreground="{Binding KindBrush}"/>
+                                        <Run Text="{Binding Text}" Foreground="{DynamicResource Fg2}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
