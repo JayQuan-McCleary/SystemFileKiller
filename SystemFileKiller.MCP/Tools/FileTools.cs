@@ -36,6 +36,29 @@ public class FileTools
         });
     }
 
+    [McpServerTool(Name = "sfk_file_delete_paths")]
+    [Description("Batch-delete N files/directories in one call. Each path is auto-detected as file or directory and processed via the LocalSystem helper service with full escalation (handle unlock, rename trick, schedule-for-reboot). Significantly faster than calling sfk_file_delete or sfk_file_delete_dir N times — single pipe round-trip instead of N. Use this whenever you have more than one path to remove.")]
+    public static string ForceDeletePaths(
+        [Description("Array of full paths to delete. Each may be a file or a directory; type is auto-detected per entry.")] string[] paths)
+    {
+        var results = FileDestroyer.ForceDeletePaths(paths ?? Array.Empty<string>());
+        int succeeded = results.Count(r => r.Result is DeleteResult.Success or DeleteResult.ScheduledForReboot);
+        return JsonSerializer.Serialize(new
+        {
+            total = results.Count,
+            succeeded,
+            failed = results.Count - succeeded,
+            allSucceeded = succeeded == results.Count,
+            results = results.Select(r => new
+            {
+                path = r.Path,
+                result = r.Result.ToString(),
+                message = r.Message,
+                success = r.Result is DeleteResult.Success or DeleteResult.ScheduledForReboot
+            })
+        }, new JsonSerializerOptions { WriteIndented = true });
+    }
+
     [McpServerTool(Name = "sfk_file_unlock")]
     [Description("Find and close all file handles locking a file. Shows which processes were holding the file. Does NOT delete the file - only unlocks it.")]
     public static string UnlockFile(

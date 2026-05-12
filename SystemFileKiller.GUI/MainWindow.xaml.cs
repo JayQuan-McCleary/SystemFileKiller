@@ -66,6 +66,13 @@ public partial class MainWindow : Window
         ViewRegistry.OnAction += SetStatus;
         ViewDashboard.OnAction += SetStatus;
         ViewAnalyze.OnAction += SetStatus;
+        ViewBatch.OnAction += SetStatus;
+        ViewNuke.OnAction += SetStatus;
+        ViewTasks.OnAction += SetStatus;
+        ViewQuarantine.OnAction += SetStatus;
+        ViewTools.OnAction += SetStatus;
+        ViewNetwork.OnAction += SetStatus;
+        ViewPersist.OnAction += SetStatus;
         ViewDashboard.OnNavigate += SwitchScreen;
         ViewRegistry.OnSuspiciousCountChanged += UpdateRegistryBadge;
 
@@ -153,18 +160,28 @@ public partial class MainWindow : Window
 
     private void SetActiveNav(Button active)
     {
-        foreach (var b in new[] { NavDashboard, NavProcesses, NavServices, NavFiles, NavRegistry, NavAnalyze })
+        foreach (var b in new[] {
+            NavDashboard, NavProcesses, NavServices, NavFiles, NavRegistry, NavAnalyze,
+            NavBatch, NavNuke, NavTasks, NavQuarantine, NavTools, NavNetwork, NavPersist
+        })
             b.Tag = b == active ? "active" : null;
     }
 
     private Button NavButtonFor(string key) => key switch
     {
-        "dashboard" => NavDashboard,
-        "processes" => NavProcesses,
-        "services"  => NavServices,
-        "files"     => NavFiles,
-        "registry"  => NavRegistry,
-        "analyze"   => NavAnalyze,
+        "dashboard"   => NavDashboard,
+        "processes"   => NavProcesses,
+        "services"    => NavServices,
+        "files"       => NavFiles,
+        "registry"    => NavRegistry,
+        "analyze"     => NavAnalyze,
+        "batch"       => NavBatch,
+        "nuke"        => NavNuke,
+        "tasks"       => NavTasks,
+        "quarantine"  => NavQuarantine,
+        "tools"       => NavTools,
+        "network"     => NavNetwork,
+        "persistence" => NavPersist,
         _ => NavProcesses,
     };
 
@@ -176,6 +193,13 @@ public partial class MainWindow : Window
         ViewFiles.Visibility = Visibility.Collapsed;
         ViewRegistry.Visibility = Visibility.Collapsed;
         ViewAnalyze.Visibility = Visibility.Collapsed;
+        ViewBatch.Visibility = Visibility.Collapsed;
+        ViewNuke.Visibility = Visibility.Collapsed;
+        ViewTasks.Visibility = Visibility.Collapsed;
+        ViewQuarantine.Visibility = Visibility.Collapsed;
+        ViewTools.Visibility = Visibility.Collapsed;
+        ViewNetwork.Visibility = Visibility.Collapsed;
+        ViewPersist.Visibility = Visibility.Collapsed;
 
         switch (key)
         {
@@ -205,6 +229,34 @@ public partial class MainWindow : Window
             case "analyze":
                 ViewAnalyze.Visibility = Visibility.Visible;
                 ScreenLabel.Text = "ANALYZE";
+                break;
+            case "batch":
+                ViewBatch.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "BATCH BUILDER";
+                break;
+            case "nuke":
+                ViewNuke.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "NUKE PLAYBOOK";
+                break;
+            case "tasks":
+                ViewTasks.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "TASKS";
+                break;
+            case "quarantine":
+                ViewQuarantine.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "QUARANTINE";
+                break;
+            case "tools":
+                ViewTools.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "ANALYSIS TOOLS";
+                break;
+            case "network":
+                ViewNetwork.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "NETWORK";
+                break;
+            case "persistence":
+                ViewPersist.Visibility = Visibility.Visible;
+                ScreenLabel.Text = "PERSISTENCE";
                 break;
         }
 

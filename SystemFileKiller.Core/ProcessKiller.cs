@@ -82,7 +82,17 @@ public static class ProcessKiller
     {
         if (killTree)
         {
+            // Snapshot liveness before walking children. If the target was alive going in but
+            // dies as a side effect of the tree walk (e.g. a shell that was blocked waiting on
+            // its child), that's Success — not NotFound. Without this short-circuit, Stage 1
+            // would hit ArgumentException on the now-dead target and return NotFound.
+            bool wasAlive = IsAlive(pid);
             KillProcessTree(pid, esc);
+            if (wasAlive && !IsAlive(pid))
+            {
+                esc.Note("TreeKill:TargetDiedWithChildren");
+                return KillResult.Success;
+            }
         }
 
         // Stage 1: Normal Process.Kill()

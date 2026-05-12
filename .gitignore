@@ -6,3 +6,10 @@ publish/
 .vs/
 .design-import/
 test-runner/
+
+# Local backup snapshots taken by deploy scripts and patch tools — not source.
+.backups/
+.patch_backup_*/
+
+# Claude Code per-environment state (worktrees, local agent state).
+.claude/worktrees/
